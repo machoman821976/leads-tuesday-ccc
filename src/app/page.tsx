@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState, type ChangeEvent, type FormEvent } from "react";
+import { supabase } from "@/lib/supabase-client";
 
 const BM_MAX_LENGTH = 30;
 
@@ -39,6 +40,8 @@ export default function Home() {
   const [irDeck, setIrDeck] = useState<File | null>(null);
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleChange =
     (field: keyof FormState) => (e: ChangeEvent<HTMLInputElement>) => {
@@ -64,13 +67,65 @@ export default function Home() {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const sanitizeFileName = (name: string) => {
+    const lastDot = name.lastIndexOf(".");
+    const ext = lastDot > -1 ? name.slice(lastDot) : "";
+    const base = (lastDot > -1 ? name.slice(0, lastDot) : name)
+      .normalize("NFKD")
+      .replace(/[^a-zA-Z0-9-_]/g, "_")
+      .slice(0, 50);
+    return `${base || "file"}${ext}`;
+  };
+
+  const uploadAttachment = async (file: File) => {
+    const path = `${Date.now()}-${crypto.randomUUID()}-${sanitizeFileName(file.name)}`;
+    const { error } = await supabase.storage
+      .from("applications")
+      .upload(path, file);
+    if (error) throw error;
+    return path;
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
     if (!validate()) {
       setSubmitted(false);
       return;
     }
-    setSubmitted(true);
+
+    setSubmitting(true);
+    try {
+      const [ceoCardPath, managerCardPath, irDeckPath] = await Promise.all([
+        uploadAttachment(ceoCard!),
+        uploadAttachment(managerCard!),
+        uploadAttachment(irDeck!),
+      ]);
+
+      const res = await fetch("/api/applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...form,
+          ceoCardPath,
+          managerCardPath,
+          irDeckPath,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`제출 실패 (${res.status})`);
+      }
+
+      setSubmitted(true);
+    } catch (err) {
+      setSubmitted(false);
+      setSubmitError(
+        err instanceof Error ? err.message : "제출 중 오류가 발생했습니다."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleReset = () => {
@@ -80,6 +135,7 @@ export default function Home() {
     setIrDeck(null);
     setErrors({});
     setSubmitted(false);
+    setSubmitError(null);
   };
 
   return (
@@ -202,9 +258,10 @@ export default function Home() {
           <div className="flex flex-col gap-3 pt-2 sm:flex-row">
             <button
               type="submit"
-              className="flex h-12 flex-1 items-center justify-center rounded-full bg-[#0b3b74] px-5 text-base font-medium text-white shadow-sm transition-colors hover:bg-[#0a2f5c]"
+              disabled={submitting}
+              className="flex h-12 flex-1 items-center justify-center rounded-full bg-[#0b3b74] px-5 text-base font-medium text-white shadow-sm transition-colors hover:bg-[#0a2f5c] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              제출하기
+              {submitting ? "제출 중..." : "제출하기"}
             </button>
             <button
               type="button"
@@ -217,8 +274,12 @@ export default function Home() {
 
           {submitted && (
             <p className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700 dark:bg-green-950 dark:text-green-400">
-              입력하신 정보가 확인되었습니다. (현재 화면에서만 확인되며, 실제
-              전송/저장 연동은 별도 설정이 필요합니다.)
+              제출이 완료되었습니다. 감사합니다.
+            </p>
+          )}
+          {submitError && (
+            <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-400">
+              {submitError}
             </p>
           )}
         </form>
