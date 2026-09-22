@@ -1,4 +1,4 @@
-import { pgTable, serial, text, varchar, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, varchar, timestamp } from "drizzle-orm/pg-core";
 
 export const applications = pgTable('applications', {
   id: serial('id').primaryKey(),
@@ -12,5 +12,14 @@ export const applications = pgTable('applications', {
   ceoCardPath: text('ceo_card_path').notNull(),
   managerCardPath: text('manager_card_path').notNull(),
   irDeckPath: text('ir_deck_path').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const applicationNotes = pgTable('application_notes', {
+  id: serial('id').primaryKey(),
+  applicationId: integer('application_id')
+    .notNull()
+    .references(() => applications.id, { onDelete: 'cascade' }),
+  content: text('content').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
