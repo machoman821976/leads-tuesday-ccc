@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, type ChangeEvent, type FormEvent } from "react";
 
 const BM_MAX_LENGTH = 30;
@@ -232,37 +233,14 @@ function BrandHeader() {
   return (
     <header className="flex w-full flex-col bg-[#0b3b74]">
       <div className="mx-auto flex w-full max-w-2xl items-center justify-between px-6 py-5 sm:px-10">
-        <div className="flex items-center gap-3">
-          <svg
-            width="34"
-            height="34"
-            viewBox="0 0 34 34"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-          >
-            <circle cx="17" cy="17" r="17" fill="#F5B335" />
-            <path
-              d="M17 6 L27 10.5 V17.5 C27 23.5 22.7 27.8 17 29 C11.3 27.8 7 23.5 7 17.5 V10.5 L17 6Z"
-              fill="#0b3b74"
-            />
-            <path
-              d="M12.5 17.2 L15.5 20.2 L21.7 13.8"
-              stroke="#F5B335"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
-            />
-          </svg>
-          <div className="flex flex-col leading-tight">
-            <span className="text-lg font-bold tracking-tight text-white">
-              신용보증기금
-            </span>
-            <span className="text-[11px] font-medium tracking-wider text-blue-200">
-              KODIT
-            </span>
-          </div>
+        <div className="flex items-center gap-3 rounded-lg bg-white px-3 py-2">
+          <Image
+            src="/kodit-logo.png"
+            alt="KODIT 신용보증기금 KOREA CREDIT GUARANTEE FUND"
+            width={160}
+            height={34}
+            priority
+          />
         </div>
         <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-medium text-blue-50">
           판교스타트업지점
