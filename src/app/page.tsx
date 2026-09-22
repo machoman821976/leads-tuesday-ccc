@@ -298,8 +298,9 @@ function BrandHeader() {
           <Image
             src="/kodit-logo.png"
             alt="KODIT 신용보증기금 KOREA CREDIT GUARANTEE FUND"
-            width={160}
-            height={34}
+            width={640}
+            height={134}
+            style={{ width: "160px", height: "auto" }}
             priority
           />
         </div>
